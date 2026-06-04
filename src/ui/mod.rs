@@ -1,9 +1,18 @@
-use crate::ui::{message::Message, screens::Screens, widgets::navbar::NavBar};
-use iced::{Element, Task, widget::column};
+use crate::{
+    core::timer::TimerService,
+    ui::{message::Message, screens::Screens, widgets::navbar::NavBar},
+};
+use iced::{
+    Element, Task,
+    time::{Duration, Instant},
+    widget::column,
+};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug)]
 pub struct Application {
     screen: Screens,
+    timer: TimerService,
+    last_tick: Option<Instant>,
 }
 
 mod message;
@@ -14,6 +23,8 @@ impl Application {
     pub(crate) fn new() -> Self {
         Application {
             screen: Screens::default(),
+            timer: TimerService::default(),
+            last_tick: None,
         }
     }
 
@@ -31,7 +42,20 @@ impl Application {
                 state.screen = Screens::Settings;
                 Task::none()
             }
+            Message::Tick(tick) => {
+                let _delta = state
+                    .last_tick
+                    .map(|last| tick.duration_since(last))
+                    .unwrap_or(Duration::ZERO);
+                state.last_tick = Some(tick);
+                // state.timer.tick(delta);
+                Task::none()
+            }
         }
+    }
+
+    pub(crate) fn subscription(_: &Application) -> iced::Subscription<Message> {
+        iced::time::every(Duration::from_secs(1)).map(Message::Tick)
     }
 
     pub(crate) fn view(_state: &Application) -> Element<'_, Message> {
