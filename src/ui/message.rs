@@ -1,9 +1,9 @@
-use iced::time::{Duration, Instant};
+use iced::time::Instant;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Message {
     GoToHome,
     GoToSettings,
-    AddNotification,
-    Tick(Instant)
+    CreateEvent,
+    Tick(Instant),
 }

@@ -1,4 +1,6 @@
-use iced::{Element, Length, widget::{Button, button, row}};
+use iced::{Element, Length, widget::{Button, button, row, svg}};
+
+use crate::ui::resources::{ResourceManager, SvgId};
 
 pub struct NavBar<'a, Message: Clone> {
     pub home: Button<'a, Message>,
@@ -7,11 +9,13 @@ pub struct NavBar<'a, Message: Clone> {
 }
 
 impl <'a, Message> NavBar<'a, Message> where Message: Clone {
-    pub fn new() -> Self {
+    pub fn new(resources: &ResourceManager) -> Self {
+        let home_icon = svg(resources.svg(SvgId::Home)).width(32).height(32);
+        let add_icon = svg(resources.svg(SvgId::Add)).width(32).height(32);
         Self {
-            home: button("Home"),
+            home: button(home_icon),
             settings: button("Settings"),
-            add_event: button("Add")
+            add_event: button(add_icon),
         }
     }
     pub fn on_home_press(mut self, message: Message) -> Self {

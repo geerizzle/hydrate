@@ -1,29 +1,34 @@
 use crate::{
     core::timer::TimerService,
-    ui::{message::Message, screens::Screens, widgets::navbar::NavBar},
+    ui::{message::Message, resources::ResourceManager, screens::{Screen, Screens, create_event}, widgets::navbar::NavBar},
 };
 use iced::{
     Element, Task,
     time::{Duration, Instant},
-    widget::column,
+    widget::{center, column, container, text},
 };
 
 #[derive(Debug)]
 pub struct Application {
     screen: Screens,
     timer: TimerService,
+    resources: ResourceManager,
     last_tick: Option<Instant>,
 }
 
+mod resources;
 mod message;
 mod screens;
 mod widgets;
 
 impl Application {
     pub(crate) fn new() -> Self {
+        let mut resources = ResourceManager::new();
+        resources.load_all();
         Application {
             screen: Screens::default(),
             timer: TimerService::default(),
+            resources,
             last_tick: None,
         }
     }
@@ -34,8 +39,8 @@ impl Application {
                 state.screen = Screens::Home;
                 Task::none()
             }
-            Message::AddNotification => {
-                state.screen = Screens::NewNotification;
+            Message::CreateEvent => {
+                state.screen = Screens::CreateEvent(create_event::State::default());
                 Task::none()
             }
             Message::GoToSettings => {
@@ -58,13 +63,19 @@ impl Application {
         iced::time::every(Duration::from_secs(1)).map(Message::Tick)
     }
 
-    pub(crate) fn view(_state: &Application) -> Element<'_, Message> {
+    pub(crate) fn view(state: &Application) -> Element<'_, Message> {
         let mut view = column![];
-        let nav_bar = NavBar::new()
+        let nav_bar = NavBar::new(&state.resources)
             .on_settings_press(Message::GoToSettings)
             .on_home_press(Message::GoToHome)
-            .on_add_press(Message::AddNotification);
+            .on_add_press(Message::CreateEvent);
         view = view.push(nav_bar);
+        let content: Element<'_, Message> = match state.screen {
+            Screens::Home => container(text("Currently Home Screen")).into(),
+            Screens::Settings => container(text("This is settigns")).into(),
+            Screens::CreateEvent(ref state) => state.view(),
+        };
+        view = view.push(center(content));
         view.into()
     }
 }

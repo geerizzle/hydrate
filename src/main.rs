@@ -1,5 +1,5 @@
-mod ui;
 mod core;
+mod ui;
 
 fn main() -> iced::Result {
     iced::application(
@@ -8,5 +8,6 @@ fn main() -> iced::Result {
         ui::Application::view,
     )
     .subscription(ui::Application::subscription)
+    .theme(iced::theme::Theme::Dark)
     .run()
 }
