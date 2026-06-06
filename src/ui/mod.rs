@@ -1,12 +1,18 @@
 use crate::{
-    core::timer::TimerService,
-    ui::{message::Message, resources::ResourceManager, screens::{Screen, Screens, create_event}, widgets::navbar::NavBar},
+    core::{event::ScheduledEvent, timer::TimerService},
+    ui::{
+        message::Message,
+        resources::ResourceManager,
+        screens::{Screen, Screens},
+        widgets::navbar::NavBar,
+    },
 };
 use iced::{
     Element, Task,
     time::{Duration, Instant},
     widget::{center, column, container, text},
 };
+use notify_rust::{Notification, Timeout};
 
 #[derive(Debug)]
 pub struct Application {
@@ -16,8 +22,8 @@ pub struct Application {
     last_tick: Option<Instant>,
 }
 
-mod resources;
 mod message;
+mod resources;
 mod screens;
 mod widgets;
 
@@ -40,7 +46,13 @@ impl Application {
                 Task::none()
             }
             Message::CreateEvent => {
-                state.screen = Screens::CreateEvent(create_event::State::default());
+                // state.screen = Screens::CreateEvent(create_event::State::default());
+                let event = ScheduledEvent::builder()
+                    .recurring(Duration::from_secs(10))
+                    .with_name("TEST")
+                    .activated(true)
+                    .build();
+                state.timer.push(event);
                 Task::none()
             }
             Message::GoToSettings => {
@@ -48,12 +60,26 @@ impl Application {
                 Task::none()
             }
             Message::Tick(tick) => {
-                let _delta = state
+                let delta = state
                     .last_tick
                     .map(|last| tick.duration_since(last))
                     .unwrap_or(Duration::ZERO);
                 state.last_tick = Some(tick);
-                // state.timer.tick(delta);
+                let to_fire = state.timer.tick(delta);
+                Task::batch(
+                    to_fire
+                        .iter()
+                        .map(|event| Task::done(Message::EventFired(event.clone()))),
+                )
+            }
+            Message::EventFired(scheduled_event) => {
+                let notification = Notification::new()
+                    .summary(scheduled_event.event_name())
+                    .body("This will almost look like a real firefox notification.")
+                    .icon("firefox")
+                    .timeout(Timeout::Milliseconds(6000)) //milliseconds
+                    .show()
+                    .unwrap();
                 Task::none()
             }
         }
