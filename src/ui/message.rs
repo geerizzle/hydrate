@@ -8,5 +8,6 @@ pub(crate) enum Message {
     GoToSettings,
     CreateEvent,
     Tick(Instant),
-    EventFired(ScheduledEvent)
+    EventFired(ScheduledEvent),
+    OpenEvent(u32)
 }

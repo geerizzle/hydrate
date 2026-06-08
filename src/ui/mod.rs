@@ -48,7 +48,7 @@ impl Application {
             Message::CreateEvent => {
                 // state.screen = Screens::CreateEvent(create_event::State::default());
                 let event = ScheduledEvent::builder()
-                    .recurring(Duration::from_secs(10))
+                    .one_shot(Duration::from_secs(7))
                     .with_name("TEST")
                     .activated(true)
                     .build();
@@ -73,7 +73,7 @@ impl Application {
                 )
             }
             Message::EventFired(scheduled_event) => {
-                let notification = Notification::new()
+                let _ = Notification::new()
                     .summary(scheduled_event.event_name())
                     .body("This will almost look like a real firefox notification.")
                     .icon("firefox")
@@ -82,6 +82,7 @@ impl Application {
                     .unwrap();
                 Task::none()
             }
+            Message::OpenEvent(_) => Task::none(),
         }
     }
 
